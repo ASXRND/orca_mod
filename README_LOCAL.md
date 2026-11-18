@@ -4,13 +4,15 @@
 запустить, обновить, какие грабли были и как их обойти. Все факты проверены на
 этой машине.
 
-Проект чужой (MIT, оригинал stablyai/orca), у нас **свой форк**:
-`origin` → https://github.com/ASXRND/orca
+Проект чужой (MIT, оригинал stablyai/orca), у нас **свой отдельный репозиторий**
+(НЕ форк — форк ASXRND/orca удалён 06.11.2026 после того, как «Sync fork» затёр
+наши доработки в main; восстановлено из ветки `fork-backup-1b4bc3a`):
+`origin` → https://github.com/ASXRND/orca_mod
 
 | Параметр         | Значение                                                                |
 | ---------------- | ----------------------------------------------------------------------- |
 | Upstream         | https://github.com/stablyai/orca (`main`)                               |
-| Форк (`origin`)  | https://github.com/ASXRND/orca                                          |
+| Наш репо (`origin`) | https://github.com/ASXRND/orca_mod                                     |
 | Версия проекта   | 1.4.220                                                                 |
 | Стек             | Electron 43.7.0, electron-vite (rolldown-vite), React 19, TypeScript ~7 |
 | Менеджер пакетов | pnpm 12.0.0 (через corepack; глобальный pnpm 11.24.0 игнорируется)      |
@@ -30,7 +32,7 @@
 | Артефакты | `dist/mac-arm64/Orca.app`, `dist/Orca-…-arm64-mac.zip`, `dist/Orca-…-mac.zip` (универсал), `dist/orca-macos-arm64.dmg`, `dist/orca-macos-x64.dmg`; `codesign --verify --deep --strict` = OK |
 | Данные приложения | `~/Library/Application Support/orca` (создаются автоматически) |
 | dev-режим (`pnpm dev`) | работает (раздел 2) |
-| Форк | `origin` → https://github.com/ASXRND/orca, `upstream` → stablyai/orca; **пуш по SSH работает** (ключ добавлен 09.10.2026) |
+| Репо | `origin` → https://github.com/ASXRND/orca_mod (отдельный репо, НЕ форк — кнопки «Sync fork» больше нет), `upstream` → stablyai/orca; **пуш по SSH работает** (ключ добавлен 09.10.2026) |
 | Merge апстримов | `895b0564d8` (v1.4.206), `f1e43ec7b2` (v1.4.209), `be0b343c1c` (v1.4.219), `a351e4e652` (v1.4.220), `f4a6817038` (v1.4.224) |
 | **Что доработано** | инвентарь всех наших изменений — **раздел 0.1** |
 | **Как пользоваться** | мануал по нашим фичам — **раздел 0.2** |
@@ -354,14 +356,14 @@ UI-тесты / запуск app из тестов — только с `ORCA_BAC
 ## 5. Git
 
 ```bash
-git remote -v      # origin = ASXRND/orca (форк); upstream = stablyai/orca
+git remote -v      # origin = ASXRND/orca_mod (наш репо); upstream = stablyai/orca
 git branch         # работаем в main
 git add -A && git commit -m "..." && git push    # в свой форк
 ```
 
 **Push работает по SSH** (с 09.10.2026, ключ добавлен в GitHub): из неинтерактивных
 шеллов HTTPS-пуш невозможен — keychain не отдаёт учётку GitHub. Проверка:
-`ssh -T git@github.com` → `Hi ASXRND/orca!`.
+`ssh -T git@github.com` → `Hi ASXRND/orca_mod!`.
 
 **ВАЖНО:** husky pre-commit гоняет `pnpm install` (rebuild-native-deps) — коммитить
 с `SDKROOT` (раздел 1), иначе commit «падает» на пересборке node-pty:
@@ -595,6 +597,7 @@ sudo chmod -h 755 /usr/local/bin/orca    # -h: менять сам симлин�
 | 10.10.2026 | Merge апстрима v1.4.224 (845 коммитов, merge `f4a6817038` + 2 формат-фикса): CI/воркфлоу/package.json/codex-файлы — версия апстрима; `service-configuration.ts` — ручное слияние (наша hub-миграция + их zcode-импорт); `main-process-ready-runtime.ts` — апстрим (у нас был случайный дубль блока). **Апстрим удалил канал `fs:authorizeExternalPath`** — browse-режим адаптирован: локальный browse ограничен проектами + floating workspace, открытие одиночного файла работает «на месте», SSH-проводник не затронут. Проверки: `pnpm tc` = 0, right-sidebar тесты = 0. Запушено |
 | 15.10.2026 | **Канал `fs:authorizeExternalPath` возвращён**: после мержа v1.4.224 пропало Tab-автодополнение путей и подъём к путям вне проектов (`Access denied: path resolves outside allowed directories`). Восстановлено: main (`authorizeExternalPath` + LRU-грант в `filesystem-auth.ts`, канал в `filesystem-write-handlers.ts`), preload (+web-заглушка), renderer (`readBrowseDirEntries` retry; `authorizeDir` в планах мутаций; `runMutation` авторизует каталог перед retry; dnd/delete/paste пробрасывают `authorizeDir`). Idle-unmount сплит-панелей НЕ возвращён. `pnpm tc` = 0, тесты main fs/auth + right-sidebar browse — зелёные. Сборка `1.4.224-local` установлена |
 | 16.10.2026 | Idle-unmount сплит-панелей **убран** (`129e18b7`): минута без pointer/keyboard размонтировала панель, терялись раскрытые папки, выделение и текст пути, а выигрыш был мизерный — у простаивающей панели нет поллинга/вотчеров, чтения с диска только по требованию (CPU ~0). Удалены `use-file-explorer-idle-render.ts` + тест, константа `FILE_EXPLORER_SPLIT_IDLE_MS`, ключ `idlePaused` в en/ru. Проверки: tc=0, right-sidebar 300 файлов / 2477 тестов чисто |
+| 06.11.2026 | **Авария и переезд в отдельный репозиторий.** Коммит `7331c19c` «Sync fork with upstream/main» (кнопка Sync fork на GitHub) заменил дерево `main` чистым апстримом — все доработки пропали из main. Восстановлено: `git reset --hard fork-backup-1b4bc3a` (дерево upstream 05.11 + наши изменения). Форк ASXRND/orca удалён, `origin` переведён на новый отдельный репо **ASXRND/orca_mod** (в нём только ветки `main` и `fork-backup-1b4bc3a`, без апстримовых веток/тегов). Обновления — как и раньше, merge тегов из `upstream` (раздел 5.1); кнопки «Sync fork» больше нет, повторение аварии исключено |
 
 
 ---
