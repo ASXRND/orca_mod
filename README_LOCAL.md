@@ -18,7 +18,7 @@
 | Менеджер пакетов | pnpm 12.0.0 (через corepack; глобальный pnpm 11.24.0 игнорируется)      |
 | Node             | v24.16.0 (nvm) — требование `engines: node 24`                          |
 | Клон             | `/Users/aleksandrhohon/Desktop/development_locall/orca`                 |
-| Приложение       | `/Applications/Orca.app` (см. раздел «Статус»)                          |
+| Приложение       | `/Applications/Orca Mod.app` (см. раздел «Статус»)                      |
 | Сборка на        | macOS 27.0, arm64, Xcode 26.6 toolchain                                 |
 
 ---
@@ -27,10 +27,10 @@
 
 | Что | Состояние |
 | --- | --- |
-| `/Applications/Orca.app` | собрано из этого клона, подпись `Orca Local Signing`, **запущено и работает** (проверено 09.10.2026) |
-| Версия сборки | `1.4.220-local.1791402080365.4e3c820741fd` (HEAD на момент сборки — `4e3c820741`) |
+| `/Applications/Orca Mod.app` | собрано из этого клона, подпись `Orca Local Signing`; **productName переименован в «Orca Mod»** (06.11.2026), appId прежний `com.stablyai.orca` — разрешения macOS сохраняются; данные перенесены в `~/Library/Application Support/Orca Mod` |
+| Версия сборки | `1.4.224-local` (HEAD `f0760c19`, 06.11.2026) |
 | Артефакты | `dist/mac-arm64/Orca.app`, `dist/Orca-…-arm64-mac.zip`, `dist/Orca-…-mac.zip` (универсал), `dist/orca-macos-arm64.dmg`, `dist/orca-macos-x64.dmg`; `codesign --verify --deep --strict` = OK |
-| Данные приложения | `~/Library/Application Support/orca` (создаются автоматически) |
+| Данные приложения | `~/Library/Application Support/Orca Mod` (переименована 06.11.2026) |
 | dev-режим (`pnpm dev`) | работает (раздел 2) |
 | Репо | `origin` → https://github.com/ASXRND/orca_mod (отдельный репо, НЕ форк — кнопки «Sync fork» больше нет), `upstream` → stablyai/orca; **пуш по SSH работает** (ключ добавлен 09.10.2026) |
 | Merge апстримов | `895b0564d8` (v1.4.206), `f1e43ec7b2` (v1.4.209), `be0b343c1c` (v1.4.219), `a351e4e652` (v1.4.220), `f4a6817038` (v1.4.224) |
@@ -598,6 +598,7 @@ sudo chmod -h 755 /usr/local/bin/orca    # -h: менять сам симлин�
 | 15.10.2026 | **Канал `fs:authorizeExternalPath` возвращён**: после мержа v1.4.224 пропало Tab-автодополнение путей и подъём к путям вне проектов (`Access denied: path resolves outside allowed directories`). Восстановлено: main (`authorizeExternalPath` + LRU-грант в `filesystem-auth.ts`, канал в `filesystem-write-handlers.ts`), preload (+web-заглушка), renderer (`readBrowseDirEntries` retry; `authorizeDir` в планах мутаций; `runMutation` авторизует каталог перед retry; dnd/delete/paste пробрасывают `authorizeDir`). Idle-unmount сплит-панелей НЕ возвращён. `pnpm tc` = 0, тесты main fs/auth + right-sidebar browse — зелёные. Сборка `1.4.224-local` установлена |
 | 16.10.2026 | Idle-unmount сплит-панелей **убран** (`129e18b7`): минута без pointer/keyboard размонтировала панель, терялись раскрытые папки, выделение и текст пути, а выигрыш был мизерный — у простаивающей панели нет поллинга/вотчеров, чтения с диска только по требованию (CPU ~0). Удалены `use-file-explorer-idle-render.ts` + тест, константа `FILE_EXPLORER_SPLIT_IDLE_MS`, ключ `idlePaused` в en/ru. Проверки: tc=0, right-sidebar 300 файлов / 2477 тестов чисто |
 | 06.11.2026 | **Авария и переезд в отдельный репозиторий.** Коммит `7331c19c` «Sync fork with upstream/main» (кнопка Sync fork на GitHub) заменил дерево `main` чистым апстримом — все доработки пропали из main. Восстановлено: `git reset --hard fork-backup-1b4bc3a` (дерево upstream 05.11 + наши изменения). Форк ASXRND/orca удалён, `origin` переведён на новый отдельный репо **ASXRND/orca_mod** (в нём только ветки `main` и `fork-backup-1b4bc3a`, без апстримовых веток/тегов). Обновления — как и раньше, merge тегов из `upstream` (раздел 5.1); кнопки «Sync fork» больше нет, повторение аварии исключено |
+| 06.11.2026 | **Ребрендинг мода: productName `Orca Mod`** (`f0760c19`, только config/electron-builder.config.cjs; appId `com.stablyai.orca` НЕ менялся — подпись/разрешения сохраняются). Сборка `1.4.224-local` установлена как `/Applications/Orca Mod.app` (старая `Orca.app` удалена), данные перенесены `~/Library/Application Support/orca → Orca Mod`. Проверки asar: 3 grep'а фиксов = 1, `authorizeExternalPath` есть, ru-локаль в бандле, `codesign --verify --deep --strict` = OK. ⚠️ CLI `/usr/local/bin/orca` указывает на удалённую Orca.app → **переустановить из Settings → Command Line Tool** |
 
 
 ---
